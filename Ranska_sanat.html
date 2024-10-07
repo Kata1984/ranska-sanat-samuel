@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranskan oppimispeli lapsille</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: #fff;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .feedback {
+            font-size: 18px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ranskan Oppimispeli</h1>
+        <p>Käännä seuraava sana suomesta ranskaksi:</p>
+        <div id="word-container"></div>
+        <input type="text" id="answer" placeholder="Kirjoita vastauksesi">
+        <br>
+        <button onclick="checkAnswer()">Vastaa</button>
+        <div class="feedback" id="feedback"></div>
+        <button onclick="nextWord()" style="display:none;" id="next-button">Seuraava sana</button>
+        <div id="summary" style="display:none;"></div>
+    </div>
+    <script>
+        const words = [
+            { finnish: "päärynä", french: "une poire" },
+            { finnish: "ananas", french: "un ananas" },
+            { finnish: "banaani", french: "une banane" },
+            { finnish: "appelsiini", french: "une orange" },
+            { finnish: "vadelma", french: "une framboise" },
+            { finnish: "karhunvatukka", french: "une mûre" },
+            { finnish: "omena", french: "une pomme" },
+            { finnish: "mansikka", french: "une fraise" },
+            { finnish: "kiivi", french: "un kiwi" },
+            { finnish: "persikka", french: "une pêche" },
+            { finnish: "mustikka", french: "une myrtille" },
+            { finnish: "kirsikka", french: "une cerise" },
+            { finnish: "hedelmä", french: "un fruit" },
+            { finnish: "marja", french: "une baie" },
+            { finnish: "leipomossa", french: "dans une pâtisserie" },
+            { finnish: "ostaa", french: "acheter (I)" },
+            { finnish: "haluaisin", french: "je voudrais" },
+            { finnish: "mehu", french: "un jus" },
+            { finnish: "hedelmämehu", french: "un jus de fruit" },
+            { finnish: "piiras", french: "une tartelette" },
+            { finnish: "sitruunatorttu", french: "une tartelette aux citrons" },
+            { finnish: "minulle", french: "pour moi" },
+            { finnish: "euro", french: "un euro" },
+            { finnish: "välipala", french: "un goûter" },
+            { finnish: "tasapainoinen", french: "équilibré" },
+            { finnish: "neuvo", french: "un conseil" },
+            { finnish: "jugurtti", french: "un yaourt" },
+            { finnish: "keksi", french: "un biscuit" },
+            { finnish: "viipale", french: "une tranche" },
+            { finnish: "minttumaito", french: "un lait menthe" },
+            { finnish: "pelataanko?", french: "on joue ?" },
+            { finnish: "syödäänkö?", french: "on mange ?" },
+            { finnish: "kala", french: "un poisson" },
+            { finnish: "kana", french: "un poulet" },
+            { finnish: "pihvi", french: "un steak" },
+            { finnish: "perunat", french: "des pommes de terre" },
+            { finnish: "pizza", french: "une pizza" },
+            { finnish: "pasta", french: "des pâtes" },
+            { finnish: "salaatti", french: "une salade" },
+            { finnish: "juusto", french: "un fromage" },
+            { finnish: "jugurtti", french: "un yaourt" },
+            { finnish: "illallinen", french: "un diner" },
+            { finnish: "terassilla", french: "à la terrasse" },
+            { finnish: "terassi", french: "une terrasse" },
+            { finnish: "naapuri", french: "un voisin, une voisine" },
+            { finnish: "kaikki", french: "tout le monde" },
+            { finnish: "saapua", french: "arriver (I)" },
+            { finnish: "tule", french: "viens" },
+            { finnish: "alkupala", french: "une entrée" },
+            { finnish: "hetki", french: "un moment" },
+            { finnish: "myöhemmin", french: "plus tard" },
+            { finnish: "sitten", french: "ensuite" },
+            { finnish: "vielä", french: "encore" },
+            { finnish: "jälkiruoka", french: "un dessert" },
+            { finnish: "kyllä(päs)", french: "si" },
+            { finnish: "Tsemppiä!", french: "Bon courage !" }
+        ];
+
+        let currentIndex = 0;
+        let correctAnswers = 0;
+        let incorrectWords = [];
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Shuffle words to ensure they appear in a random order
+        shuffle(words);
+
+        function displayWord() {
+            document.getElementById("word-container").innerText = words[currentIndex].finnish;
+            document.getElementById("answer").value = "";
+            document.getElementById("feedback").innerText = "";
+            document.getElementById("next-button").style.display = "none";
+        }
+
+        function checkAnswer() {
+            const userAnswer = document.getElementById("answer").value.trim().toLowerCase();
+            const correctAnswer = words[currentIndex].french.toLowerCase();
+
+            if (userAnswer === correctAnswer) {
+                document.getElementById("feedback").innerText = "Oikein! Hyvää työtä!";
+                correctAnswers++;
+            } else {
+                document.getElementById("feedback").innerText = `Väärin. Oikea vastaus oli: ${words[currentIndex].french}`;
+                incorrectWords.push(words[currentIndex]);
+            }
+            document.getElementById("next-button").style.display = "inline-block";
+        }
+
+        function nextWord() {
+            currentIndex++;
+            if (currentIndex < words.length && currentIndex < 30) {
+                displayWord();
+            } else {
+                displaySummary();
+            }
+        }
+
+        function displaySummary() {
+            document.getElementById("summary").style.display = "block";
+            document.getElementById("word-container").style.display = "none";
+            document.getElementById("answer").style.display = "none";
+            document.getElementById("feedback").style.display = "none";
+            document.getElementById("next-button").style.display = "none";
+
+            let summaryText = `Kävit läpi ${currentIndex} sanaa. Oikein vastasit ${correctAnswers} sanaan.`;
+            if (incorrectWords.length > 0) {
+                summaryText += "<br><br>Näihin sanoihin kannattaa vielä palata:<ul>";
+                incorrectWords.forEach(word => {
+                    summaryText += `<li>${word.finnish} - ${word.french}</li>`;
+                });
+                summaryText += "</ul>";
+            } else {
+                summaryText += "<br><br>Mahtavaa! Kaikki sanat menivät oikein!";
+            }
+
+            summaryText += "<br><br><button onclick='restartGame()'>Pelaa uudelleen</button>";
+            document.getElementById("summary").innerHTML = summaryText;
+        }
+
+        function restartGame() {
+            currentIndex = 0;
+            correctAnswers = 0;
+            incorrectWords = [];
+            shuffle(words);
+            document.getElementById("summary").style.display = "none";
+            document.getElementById("word-container").style.display = "block";
+            document.getElementById("answer").style.display = "inline-block";
+            document.getElementById("feedback").style.display = "block";
+            displayWord();
+        }
+
+        // Start the game
+        displayWord();
+    </script>
+</body>
+</html>
